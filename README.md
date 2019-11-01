@@ -1,7 +1,8 @@
 # flutter_ballon_slider
 
 #UXEChallenge1
-![demo](./demo.gif)
+
+<img src="./demo.gif" width="200" />
 
 Todo:
 
