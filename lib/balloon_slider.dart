@@ -583,33 +583,42 @@ class _BalloonSliderState extends State<BalloonSlider>
           ),
     );
 
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Container(
-          child: AnimatedAlign(
-            alignment: Alignment((widget.value * 2) - 1, -1.0),
-            curve: Curves.easeInOut,
-            duration: Duration(milliseconds: 100),
-            child: Text("Placeholder Balloon"),
+    return LayoutBuilder(
+      builder: (context, c) => Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            width: c.maxWidth,
+            height: 60,
+            padding: EdgeInsets.symmetric(horizontal: 25),
+            child:  AnimatedAlign(
+              alignment: Alignment((widget.value * 2) - 1, -0.4),
+              curve: Curves.easeInOut,
+              duration: Duration(milliseconds: 60),
+              child: CustomPaint(
+                painter: BalloonPainter(widget.value),
+                willChange: true,
+
+              ),
+            ),
           ),
-          width: double.infinity,
-        ),
-        _SliderRenderObjectWidget(
-          value: _unlerp(widget.value),
-          divisions: widget.divisions,
-          label: widget.label,
-          sliderTheme: sliderTheme,
-          mediaQueryData: MediaQuery.of(context),
-          onChanged: (widget.onChanged != null) && (widget.max > widget.min)
-              ? _handleChanged
-              : null,
-          onChangeStart: widget.onChangeStart != null ? _handleDragStart : null,
-          onChangeEnd: widget.onChangeEnd != null ? _handleDragEnd : null,
-          state: this,
-          semanticFormatterCallback: widget.semanticFormatterCallback,
-        ),
-      ],
+          _SliderRenderObjectWidget(
+            value: _unlerp(widget.value),
+            divisions: widget.divisions,
+            label: widget.label,
+            sliderTheme: sliderTheme,
+            mediaQueryData: MediaQuery.of(context),
+            onChanged: (widget.onChanged != null) && (widget.max > widget.min)
+                ? _handleChanged
+                : null,
+            onChangeStart:
+                widget.onChangeStart != null ? _handleDragStart : null,
+            onChangeEnd: widget.onChangeEnd != null ? _handleDragEnd : null,
+            state: this,
+            semanticFormatterCallback: widget.semanticFormatterCallback,
+          ),
+        ],
+      ),
     );
   }
 
