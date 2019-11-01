@@ -419,9 +419,15 @@ class _BalloonSliderState extends State<BalloonSlider>
 
   AnimationController holdingController;
 
+  AnimationController movingController;
+  double rotateAnimationValue;
+
+  double lastValue;
+
   @override
   void initState() {
     super.initState();
+    lastValue = widget.value;
     overlayController = AnimationController(
       duration: kRadialReactionDuration,
       vsync: this,
@@ -430,6 +436,18 @@ class _BalloonSliderState extends State<BalloonSlider>
       duration: Duration(milliseconds: 300),
       vsync: this,
     );
+    movingController = AnimationController(
+      duration: Duration(seconds: 5),
+      vsync: this,
+    );
+
+    movingController.addListener(() {
+      lastValue = Tween(begin: lastValue, end: widget.value)
+          .transform(movingController.value);
+      rotateAnimationValue = Tween(begin: -pi / 6, end: pi / 6)
+          .transform((widget.value - lastValue / 5).clamp(0.0, 1.0));
+    });
+
     valueIndicatorController = AnimationController(
       duration: valueIndicatorAnimationDuration,
       vsync: this,
@@ -444,6 +462,7 @@ class _BalloonSliderState extends State<BalloonSlider>
     );
     enableController.value = widget.onChanged != null ? 1.0 : 0.0;
     positionController.value = _unlerp(widget.value);
+    movingController.value = 0.5;
   }
 
   @override
@@ -461,6 +480,9 @@ class _BalloonSliderState extends State<BalloonSlider>
     final double lerpValue = _lerp(value);
     if (lerpValue != widget.value) {
       widget.onChanged(lerpValue);
+    }
+    if (!movingController.isAnimating) {
+      movingController.forward(from: 0.0);
     }
   }
 
@@ -603,39 +625,7 @@ class _BalloonSliderState extends State<BalloonSlider>
             width: c.maxWidth,
             height: 60,
             padding: EdgeInsets.symmetric(horizontal: 25),
-            child: AnimatedBuilder(
-              animation: holdingController,
-              child: AnimatedOpacity(
-                opacity: isVisible ? 1.0 : 0.0,
-                duration: Duration(milliseconds: 120),
-                child: AnimatedAlign(
-                  alignment: Alignment((widget.value * 2) - 1, -0.4),
-                  curve: Curves.easeInOut,
-                  duration: Duration(milliseconds: 60),
-                  child: CustomPaint(
-                    painter: BalloonPainter(widget.value),
-                    willChange: true,
-                  ),
-                ),
-              ),
-              builder: (context, w) {
-                return Transform.scale(
-                  scale: Curves.easeIn.transform(holdingController.value),
-                  alignment: Alignment((widget.value * 2) - 1, -0.4),
-                  origin: Offset(
-                    0,
-                    Curves.easeIn.transform(1 - holdingController.value) * 100,
-                  ),
-                  child: Transform.translate(
-                    offset: Offset(
-                      0,
-                      Curves.easeIn.transform(1 - holdingController.value) * 60,
-                    ),
-                    child: w,
-                  ),
-                );
-              },
-            ),
+            child: buildBaseAnimation(),
           ),
           _SliderRenderObjectWidget(
             value: _unlerp(widget.value),
@@ -653,6 +643,56 @@ class _BalloonSliderState extends State<BalloonSlider>
           ),
         ],
       ),
+    );
+  }
+
+  AnimatedBuilder buildRotation() {
+    return AnimatedBuilder(
+      animation: movingController,
+      child: CustomPaint(
+        painter: BalloonPainter(widget.value),
+        willChange: true,
+      ),
+      builder: (context, w) {
+        return Transform.rotate(
+          angle: rotateAnimationValue,
+          alignment: Alignment.center,
+          child: w,
+        );
+      },
+    );
+  }
+
+  AnimatedBuilder buildBaseAnimation() {
+    return AnimatedBuilder(
+      animation: holdingController,
+      child: AnimatedOpacity(
+        opacity: isVisible ? 1.0 : 0.0,
+        duration: Duration(milliseconds: 120),
+        child: AnimatedAlign(
+          alignment: Alignment((widget.value * 2) - 1, -0.4),
+          curve: Curves.easeInOut,
+          duration: Duration(milliseconds: 60),
+          child: buildRotation(),
+        ),
+      ),
+      builder: (context, w) {
+        return Transform.scale(
+          scale: Curves.easeIn.transform(holdingController.value),
+          alignment: Alignment((widget.value * 2) - 1, -0.4),
+          origin: Offset(
+            0,
+            Curves.easeIn.transform(1 - holdingController.value) * 100,
+          ),
+          child: Transform.translate(
+            offset: Offset(
+              0,
+              Curves.easeIn.transform(1 - holdingController.value) * 60,
+            ),
+            child: w,
+          ),
+        );
+      },
     );
   }
 
