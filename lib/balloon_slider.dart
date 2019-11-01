@@ -583,19 +583,33 @@ class _BalloonSliderState extends State<BalloonSlider>
           ),
     );
 
-    return _SliderRenderObjectWidget(
-      value: _unlerp(widget.value),
-      divisions: widget.divisions,
-      label: widget.label,
-      sliderTheme: sliderTheme,
-      mediaQueryData: MediaQuery.of(context),
-      onChanged: (widget.onChanged != null) && (widget.max > widget.min)
-          ? _handleChanged
-          : null,
-      onChangeStart: widget.onChangeStart != null ? _handleDragStart : null,
-      onChangeEnd: widget.onChangeEnd != null ? _handleDragEnd : null,
-      state: this,
-      semanticFormatterCallback: widget.semanticFormatterCallback,
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Container(
+          child: AnimatedAlign(
+            alignment: Alignment((widget.value * 2) - 1, -1.0),
+            curve: Curves.easeInOut,
+            duration: Duration(milliseconds: 100),
+            child: Text("Placeholder Balloon"),
+          ),
+          width: double.infinity,
+        ),
+        _SliderRenderObjectWidget(
+          value: _unlerp(widget.value),
+          divisions: widget.divisions,
+          label: widget.label,
+          sliderTheme: sliderTheme,
+          mediaQueryData: MediaQuery.of(context),
+          onChanged: (widget.onChanged != null) && (widget.max > widget.min)
+              ? _handleChanged
+              : null,
+          onChangeStart: widget.onChangeStart != null ? _handleDragStart : null,
+          onChangeEnd: widget.onChangeEnd != null ? _handleDragEnd : null,
+          state: this,
+          semanticFormatterCallback: widget.semanticFormatterCallback,
+        ),
+      ],
     );
   }
 
