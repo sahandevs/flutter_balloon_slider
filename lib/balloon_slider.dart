@@ -417,11 +417,17 @@ class _BalloonSliderState extends State<BalloonSlider>
   AnimationController positionController;
   Timer interactionTimer;
 
+  AnimationController holdingController;
+
   @override
   void initState() {
     super.initState();
     overlayController = AnimationController(
       duration: kRadialReactionDuration,
+      vsync: this,
+    );
+    holdingController = AnimationController(
+      duration: Duration(milliseconds: 300),
       vsync: this,
     );
     valueIndicatorController = AnimationController(
@@ -458,14 +464,18 @@ class _BalloonSliderState extends State<BalloonSlider>
     }
   }
 
+  bool isVisible = false;
+
   void _handleDragStart(double value) {
-    assert(widget.onChangeStart != null);
-    widget.onChangeStart(_lerp(value));
+    if (widget.onChangeStart != null) widget.onChangeStart(_lerp(value));
+    setState(() => isVisible = true);
+    holdingController.forward();
   }
 
   void _handleDragEnd(double value) {
-    assert(widget.onChangeEnd != null);
-    widget.onChangeEnd(_lerp(value));
+    if (widget.onChangeEnd != null) widget.onChangeEnd(_lerp(value));
+    setState(() => isVisible = false);
+    holdingController.reverse();
   }
 
   // Returns a number between min and max, proportional to value, which must
@@ -583,6 +593,8 @@ class _BalloonSliderState extends State<BalloonSlider>
           ),
     );
 
+    // jump
+
     return LayoutBuilder(
       builder: (context, c) => Column(
         mainAxisSize: MainAxisSize.min,
@@ -591,15 +603,38 @@ class _BalloonSliderState extends State<BalloonSlider>
             width: c.maxWidth,
             height: 60,
             padding: EdgeInsets.symmetric(horizontal: 25),
-            child:  AnimatedAlign(
-              alignment: Alignment((widget.value * 2) - 1, -0.4),
-              curve: Curves.easeInOut,
-              duration: Duration(milliseconds: 60),
-              child: CustomPaint(
-                painter: BalloonPainter(widget.value),
-                willChange: true,
-
+            child: AnimatedBuilder(
+              animation: holdingController,
+              child: AnimatedOpacity(
+                opacity: isVisible ? 1.0 : 0.0,
+                duration: Duration(milliseconds: 120),
+                child: AnimatedAlign(
+                  alignment: Alignment((widget.value * 2) - 1, -0.4),
+                  curve: Curves.easeInOut,
+                  duration: Duration(milliseconds: 60),
+                  child: CustomPaint(
+                    painter: BalloonPainter(widget.value),
+                    willChange: true,
+                  ),
+                ),
               ),
+              builder: (context, w) {
+                return Transform.scale(
+                  scale: Curves.easeIn.transform(holdingController.value),
+                  alignment: Alignment((widget.value * 2) - 1, -0.4),
+                  origin: Offset(
+                    0,
+                    Curves.easeIn.transform(1 - holdingController.value) * 100,
+                  ),
+                  child: Transform.translate(
+                    offset: Offset(
+                      0,
+                      Curves.easeIn.transform(1 - holdingController.value) * 60,
+                    ),
+                    child: w,
+                  ),
+                );
+              },
             ),
           ),
           _SliderRenderObjectWidget(
@@ -611,9 +646,8 @@ class _BalloonSliderState extends State<BalloonSlider>
             onChanged: (widget.onChanged != null) && (widget.max > widget.min)
                 ? _handleChanged
                 : null,
-            onChangeStart:
-                widget.onChangeStart != null ? _handleDragStart : null,
-            onChangeEnd: widget.onChangeEnd != null ? _handleDragEnd : null,
+            onChangeStart: _handleDragStart,
+            onChangeEnd: _handleDragEnd,
             state: this,
             semanticFormatterCallback: widget.semanticFormatterCallback,
           ),
