@@ -4,6 +4,10 @@ import 'balloon_slider.dart';
 
 void main() => runApp(MyApp());
 
+const Color kBackgroundColor = Color.fromARGB(255, 243, 247, 252);
+const Color kInactiveColor = Color.fromARGB(255, 200, 209, 233);
+const Color kActiveColor = Color.fromARGB(255, 74, 15, 226);
+
 class MyApp extends StatelessWidget {
   // This widget is the root of your application.
   @override
@@ -32,11 +36,15 @@ class _MyHomePageState extends State<MyHomePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-        body: Center(
-      child: BalloonSlider(
-        onChanged: (_value) => setState(() => value = _value),
-        value: value,
+      backgroundColor: kBackgroundColor,
+      body: Center(
+        child: BalloonSlider(
+          onChanged: (_value) => setState(() => value = _value),
+          value: value,
+          activeColor: kActiveColor,
+          inactiveColor: kInactiveColor,
+        ),
       ),
-    ));
+    );
   }
 }
