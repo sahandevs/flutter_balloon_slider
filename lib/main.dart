@@ -31,7 +31,7 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
-  double value = 0.0;
+  double value = 0.4;
 
   @override
   Widget build(BuildContext context) {
